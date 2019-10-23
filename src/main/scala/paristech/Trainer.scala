@@ -52,7 +52,7 @@ object Trainer {
 
     df.groupBy("country2").count.show(100)
     //df.groupBy("currency2").count.show(100)
- /*
+
     //STAGE 1
     val tokenizer = new RegexTokenizer()
       .setPattern("\\W+")
@@ -62,64 +62,49 @@ object Trainer {
     val wordsData = tokenizer.transform(df)
 //wordsData.show(5)
     println("hello world ! from Trainer 2")
+
     //STAGE 2
     val remover = new StopWordsRemover()
       .setInputCol("tokens")
       .setOutputCol("removed")
-      .setStopWords(Array("the","a","http","i","me","to","what","in","rt"))
+      .setStopWords(Array("the","a","http","i","me","to","what","in","rt", "for", "s", "of", "you", "your", "don", "t"))
+// how to establish list? no? don't?
 
     val cleanWordsData = remover.transform(wordsData)
-  //  cleanWordsData.show()
-    //STAGE 3
+ //   val df2 = cleanWordsData.select("tokens", "removed", "text")
+   //   df2.show(10, false)
+
+    //STAGE 3 : TF(t,d)
     println("hello world ! from Trainer 3")
     val cvModel: CountVectorizerModel = new CountVectorizer()
-      .setInputCol("tokens")
+      .setInputCol("removed")
       .setOutputCol("features")
-      .setVocabSize(100)
+      //.setVocabSize(2000)
       .fit(cleanWordsData)  //
 
-    val dfTest = cvModel.transform(cleanWordsData)
-  //  dfTest.show(5)
+    val dfTf = cvModel.transform(cleanWordsData)
+    //val df1 = dfTf.select("removed", "features")
+    //df1.show(10, false )
     println("hello world ! from Trainer 4")
+
     //STAGE 4 :  Implémenter la partie IDF avec en output une colonne tfidf.
     val idf = new IDF()
       .setInputCol("features")
       .setOutputCol("tfidf")
 
-    val idfModel = idf.fit(dfTest)
-    val rescaledData = idfModel.transform(dfTest)
-    rescaledData.select("label", "tfidf").show()
-*/
-/*
-    newDataSet
-      .select("removed") // if you're interested only in "clean" text
-      .map(row => row.getSeq[String](0).mkString(" ")) // make Array[String] into String
-      .write.text("/path/to/SherlockHolmsWithoutStopWords.txt")
+    val idfModel = idf.fit(dfTf)
+    val rescaledData = idfModel.transform(dfTf)
+    rescaledData.select( "tfidf", "features").show(truncate = false)
 
-
-    val splits = cleanData.randomSplit(Array(0.9, 0.1))     // splitting training and test data
-    val (trainingData, testData) = (splits(0), splits(1))
-
-    val lr = new LogisticRegression()                       // use  of Logistic regression Classifier
-      .setElasticNetParam(1.0)                              // L1 penalisation --> LASSO
-      .setStandardization(true)
-      .setFitIntercept(true)
-      .setTol(1.0e-5)
-      .setMaxIter(300)
-
-*/
-
-
-    //STAGE 5
-    //There are 11 countries and 9 currencies (number found by groupby.count query)
-    // Est ce que j'ai besoin de garder le pays/la currency asso a chaque index?
+//STAGE 5
+//There are 11 countries and 9 currencies (number found by groupby.count query)
 
     val indexer = new VectorIndexer()
       .setInputCol("country2")
       .setOutputCol("country_indexed")
       .setMaxCategories(11)
 
-    val dfCategorical = indexer.transform(df)
+    val dfCategorical = indexer.transform(rescaledData)
 
     //STAGE 6
     val indexer2 = new VectorIndexer()
@@ -129,7 +114,44 @@ object Trainer {
 
 
     val dfCategorical2 = indexer.transform(dfCategorical)
+
+
     //STAGE 7 & 8
+    //Transformer ces deux catégories avec un "one-hot encoder" en créant les colonnes country_onehot et currency_onehot.
+    //Get distinct countries & Get distinct currencies ?
+
+
+
+   /* s = 'black holes'
+    print(s)
+    poss = 'abcdefghijklmnopqrstuvwxyz '
+    char_to_int = dict((j, i) for i, j in enumerate(poss))
+    int_to_char = dict((i, j) for i, j in enumerate(poss))
+    integer_encoded = [char_to_int[i] for i in s]
+    print(integer_encoded)
+
+    onehot_encoded = list()
+    for i in integer_encoded:
+      t=[0 for j in range(len(poss))]
+    t[i]=1
+    onehot_encoded.append(t)
+    print(onehot_encoded)
+    inverted = int_to_char[argmax(onehot_encoded[0])]
+    print(inverted)*/
+
+
+    /*
+
+
+        val splits = cleanData.randomSplit(Array(0.9, 0.1))     // splitting training and test data
+        val (trainingData, testData) = (splits(0), splits(1))
+
+
+
+    */
+
+
+
 
   }
 }

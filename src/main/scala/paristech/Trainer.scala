@@ -67,8 +67,7 @@ object Trainer {
     val remover = new StopWordsRemover()
       .setInputCol("tokens")
       .setOutputCol("removed")
-      .setStopWords(Array("the","a","http","i","me","to","what","in","rt", "for", "s", "of", "you", "your", "don", "t"))
-// how to establish list? no? don't?
+      .setStopWords(StopWordsRemover.loadDefaultStopWords("english"))
 
     val cleanWordsData = remover.transform(wordsData)
  //   val df2 = cleanWordsData.select("tokens", "removed", "text")
@@ -94,32 +93,51 @@ object Trainer {
 
     val idfModel = idf.fit(dfTf)
     val rescaledData = idfModel.transform(dfTf)
-    rescaledData.select( "tfidf", "features").show(truncate = false)
+   // rescaledData.select( "tfidf", "features").show(truncate = false)
 
 //STAGE 5
 //There are 11 countries and 9 currencies (number found by groupby.count query)
 
-    val indexer = new VectorIndexer()
+    val cvModel2: CountVectorizerModel = new CountVectorizer()
+      .setInputCol("country2")
+      .setOutputCol("country_indexed")
+      .setVocabSize(11)
+      .fit(rescaledData)
+
+    cvModel2.transform(rescaledData).show(false)
+
+   /* val indexer = new VectorIndexer()
       .setInputCol("country2")
       .setOutputCol("country_indexed")
       .setMaxCategories(11)
 
-    val dfCategorical = indexer.transform(rescaledData)
+    val indexerModel = indexer.fit(rescaledData)
 
-    //STAGE 6
+    val categoricalFeatures: Set[Int] = indexerModel.categoryMaps.keys.toSet
+    println(s"Chose ${categoricalFeatures.size} " +
+      s"categorical features: ${categoricalFeatures.mkString(", ")}")
+
+    // Create new column "indexed" with categorical values transformed to indices
+    val indexedData = indexerModel.transform(rescaledData)
+    indexedData.show()*/
+
+
+  /*  //STAGE 6
     val indexer2 = new VectorIndexer()
       .setInputCol("currency3")
       .setOutputCol("currency_indexed")
       .setMaxCategories(9)
 
 
-    val dfCategorical2 = indexer.transform(dfCategorical)
+    val dfCategorical2 = indexer.transform(dfCategorical)*/
 
 
     //STAGE 7 & 8
     //Transformer ces deux catégories avec un "one-hot encoder" en créant les colonnes country_onehot et currency_onehot.
-    //Get distinct countries & Get distinct currencies ?
+    //Get distinct countries & Get distinct currenci
+ //   val pays = indexedData.groupBy("country_2")
 
+   // print(pays)
 
 
    /* s = 'black holes'
